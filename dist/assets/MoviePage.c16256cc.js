@@ -1,0 +1,1 @@
+import{_ as t,M as a,r as n,o as r,h as s}from"./main.1d621a49.js";const p={name:"MoviePage",props:{movtype:String},components:{MovieCardListVue:a}};function c(i,m,e,v,_,u){const o=n("MovieCardListVue");return r(),s(o,{movtype:e.movtype},null,8,["movtype"])}var f=t(p,[["render",c]]);export{f as default};

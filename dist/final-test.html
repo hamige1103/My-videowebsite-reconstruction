@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终视频播放测试 - 已修复HLS支持</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10/dist/hls.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .info {
+            color: blue;
+            font-weight: bold;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            margin: 10px 0;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+        }
+        .hls-info {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 最终视频播放测试 - 已修复HLS支持</h1>
+        
+        <div class="test-section">
+            <h2>✅ 系统状态检查</h2>
+            <p id="status">正在检查系统状态...</p>
+            <div id="hls-status" class="hls-info"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📹 测试视频播放</h2>
+            <p>测试使用HLS.js + HTML5 video标签播放HLS视频流：</p>
+            
+            <video id="testVideo" controls preload="auto">
+                您的浏览器不支持HTML5视频播放
+            </video>
+            
+            <p><strong>视频源：</strong> Mux测试流 (最稳定)</p>
+            <p><strong>格式：</strong> HLS (.m3u8)</p>
+            <p><strong>播放技术：</strong> <span id="tech-used">检测中...</span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 备用源测试</h2>
+            <p>备用视频源列表：</p>
+            <ul>
+                <li>✅ Mux测试流: https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8</li>
+                <li>✅ Akamai测试流: https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8</li>
+                <li>✅ 加拿大电视台测试流: https://mnmedias.api.telequebec.tv/m3u8/29880.m3u8</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 技术信息</h2>
+            <p><strong>播放器类型：</strong> HTML5 video标签 + HLS.js</p>
+            <p><strong>HLS支持：</strong> <span id="hls-support">检测中...</span></p>
+            <p><strong>当前状态：</strong> <span id="tech-status">检查中...</span></p>
+        </div>
+    </div>
+
+    <script>
+        // 检查系统状态
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusEl = document.getElementById('status');
+            const techStatusEl = document.getElementById('tech-status');
+            const hlsSupportEl = document.getElementById('hls-support');
+            const techUsedEl = document.getElementById('tech-used');
+            const hlsStatusEl = document.getElementById('hls-status');
+            
+            const video = document.getElementById('testVideo');
+            const videoUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+            
+            // 检查浏览器HLS支持
+            const nativeHlsSupport = video.canPlayType('application/vnd.apple.mpegurl');
+            const hlsJsSupport = Hls && Hls.isSupported();
+            
+            if (nativeHlsSupport) {
+                hlsSupportEl.innerHTML = '<span class="success">✅ 浏览器原生支持HLS</span>';
+                techUsedEl.innerHTML = '原生HLS支持';
+                
+                // 使用原生HLS支持
+                video.src = videoUrl;
+                video.load();
+                
+                statusEl.innerHTML = '<span class="success">✅ 系统正常 - 使用浏览器原生HLS支持</span>';
+                hlsStatusEl.innerHTML = '🎯 使用浏览器原生HLS播放技术';
+                
+            } else if (hlsJsSupport) {
+                hlsSupportEl.innerHTML = '<span class="info">🔧 使用HLS.js库支持</span>';
+                techUsedEl.innerHTML = 'HLS.js库支持';
+                
+                // 使用HLS.js
+                const hls = new Hls({
+                    enableWorker: false,
+                    lowLatencyMode: true
+                });
+                
+                hls.loadSource(videoUrl);
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log('HLS流已解析，可以播放');
+                    statusEl.innerHTML = '<span class="success">✅ 系统正常 - 使用HLS.js库支持HLS播放</span>';
+                    hlsStatusEl.innerHTML = '🎯 使用HLS.js库播放技术 - 流已解析';
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS播放错误:', data);
+                    hlsStatusEl.innerHTML = '<span class="error">❌ HLS播放错误: ' + data.details + '</span>';
+                });
+                
+            } else {
+                hlsSupportEl.innerHTML = '<span class="error">❌ 浏览器不支持HLS播放</span>';
+                techUsedEl.innerHTML = '不支持HLS';
+                statusEl.innerHTML = '<span class="error">❌ 浏览器不支持HLS播放，请使用Chrome、Firefox或Edge浏览器</span>';
+                hlsStatusEl.innerHTML = '<span class="error">❌ 您的浏览器不支持HLS视频播放</span>';
+            }
+            
+            techStatusEl.innerHTML = '<span class="success">✅ 播放器已配置完成</span>';
+            
+            // 监听视频事件
+            video.addEventListener('error', function(e) {
+                console.error('视频播放错误:', e);
+                hlsStatusEl.innerHTML = '<span class="error">❌ 视频播放错误</span>';
+            });
+            
+            video.addEventListener('canplay', function() {
+                console.log('视频可以播放');
+                hlsStatusEl.innerHTML = '<span class="success">✅ 视频可以播放</span>';
+            });
+            
+            video.addEventListener('loadeddata', function() {
+                console.log('视频数据已加载');
+            });
+            
+            // 尝试自动播放
+            video.play().catch(e => {
+                console.log('自动播放失败，等待用户手动播放');
+            });
+        });
+    </script>
+</body>
+</html>

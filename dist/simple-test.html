@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单视频源测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .video-container {
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>简单视频源测试</h1>
+        
+        <div class="status info">
+            测试说明：使用原生HTML5 video标签测试视频源
+        </div>
+        
+        <h2>测试1: 主要视频源 (HLS流)</h2>
+        <div class="status" id="status1">准备测试...</div>
+        <div class="video-container">
+            <video id="video1" controls preload="metadata">
+                <source src="https://vod12.wgslsw.com/20251106/hF6C5EDnh682/index.m3u8" type="application/x-mpegURL">
+                您的浏览器不支持HTML5视频播放。
+            </video>
+        </div>
+        
+        <h2>测试2: 稳定备用源 (MP4格式)</h2>
+        <div class="status" id="status2">准备测试...</div>
+        <div class="video-container">
+            <video id="video2" controls preload="metadata">
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                您的浏览器不支持HTML5视频播放。
+            </video>
+        </div>
+        
+        <h2>测试3: 快速备用源 (HLS流)</h2>
+        <div class="status" id="status3">准备测试...</div>
+        <div class="video-container">
+            <video id="video3" controls preload="metadata">
+                <source src="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" type="application/x-mpegURL">
+                您的浏览器不支持HTML5视频播放。
+            </video>
+        </div>
+        
+        <div class="status info" id="browserInfo">
+            正在检测浏览器信息...
+        </div>
+    </div>
+
+    <script>
+        // 检测浏览器信息
+        function detectBrowserInfo() {
+            const info = document.getElementById('browserInfo');
+            const video = document.createElement('video');
+            
+            info.innerHTML = `
+                <strong>浏览器信息:</strong><br>
+                User Agent: ${navigator.userAgent}<br>
+                支持HLS: ${video.canPlayType('application/x-mpegURL') ? '是' : '否'}<br>
+                支持MP4: ${video.canPlayType('video/mp4') ? '是' : '否'}<br>
+                支持WebM: ${video.canPlayType('video/webm') ? '是' : '否'}
+            `;
+        }
+
+        // 测试视频播放
+        function testVideoPlayback(videoId, statusId) {
+            const video = document.getElementById(videoId);
+            const status = document.getElementById(statusId);
+            
+            video.addEventListener('loadedmetadata', function() {
+                status.textContent = '视频元数据已加载，可以播放！';
+                status.className = 'status success';
+            });
+            
+            video.addEventListener('error', function() {
+                status.textContent = '视频加载失败，可能源不可用或格式不支持';
+                status.className = 'status error';
+                console.error('视频错误:', video.error);
+            });
+            
+            video.addEventListener('canplay', function() {
+                status.textContent = '视频可以播放！';
+                status.className = 'status success';
+            });
+            
+            // 尝试加载视频
+            video.load();
+        }
+
+        // 页面加载完成后执行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            detectBrowserInfo();
+            
+            // 延迟执行测试
+            setTimeout(() => {
+                testVideoPlayback('video1', 'status1');
+                testVideoPlayback('video2', 'status2');
+                testVideoPlayback('video3', 'status3');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单视频测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .video-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>简单视频播放测试</h1>
+        
+        <div class="video-container">
+            <video id="videoPlayer" controls>
+                您的浏览器不支持HTML5视频播放
+            </video>
+        </div>
+        
+        <div id="status" class="status info">
+            请选择一个视频源进行测试
+        </div>
+        
+        <div class="test-section">
+            <h3>测试原始视频源</h3>
+            <button onclick="testOriginal()">测试原始源</button>
+            <p><strong>URL:</strong> https://vod12.wgslsw.com/2024/12/31/5e8d8c9c-9f9c-4e5c-9b5e-5e8d8c9c9f9c/playlist.m3u8</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试备用视频源</h3>
+            <button onclick="testBackup1()">备用源1 (Mux)</button>
+            <button onclick="testBackup2()">备用源2 (Akamai)</button>
+            <button onclick="testBackup3()">备用源3 (Telequebec)</button>
+            <p><strong>备用源URL:</strong></p>
+            <ul>
+                <li>https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8</li>
+                <li>https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8</li>
+                <li>https://mnmedias.api.telequebec.tv/m3u8/29880.m3u8</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试MP4视频源</h3>
+            <button onclick="testMP4()">测试MP4源</button>
+            <p><strong>MP4 URL:</strong> https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4</p>
+        </div>
+    </div>
+
+    <script>
+        const videoPlayer = document.getElementById('videoPlayer');
+        const statusDiv = document.getElementById('status');
+        
+        function setStatus(message, type = 'info') {
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function testVideo(url, name, type = 'application/x-mpegURL') {
+            setStatus(`正在加载 ${name}...`, 'info');
+            
+            // 清除之前的源
+            videoPlayer.innerHTML = '';
+            
+            // 添加新的源
+            const source = document.createElement('source');
+            source.src = url;
+            source.type = type;
+            videoPlayer.appendChild(source);
+            
+            // 加载视频
+            videoPlayer.load();
+            
+            // 监听事件
+            videoPlayer.onerror = function() {
+                if (videoPlayer.error) {
+                    let errorMsg = `${name} 错误: `;
+                    switch(videoPlayer.error.code) {
+                        case 1: errorMsg += '播放被中止'; break;
+                        case 2: errorMsg += '网络错误'; break;
+                        case 3: errorMsg += '解码错误'; break;
+                        case 4: errorMsg += '格式不支持'; break;
+                        default: errorMsg += '未知错误';
+                    }
+                    setStatus(errorMsg, 'error');
+                }
+            };
+            
+            videoPlayer.oncanplay = function() {
+                setStatus(`${name} 可以播放，请点击播放按钮`, 'success');
+            };
+            
+            // 尝试自动播放
+            videoPlayer.play().catch(e => {
+                setStatus(`${name} 已加载，但自动播放被阻止。请手动点击播放按钮`, 'info');
+            });
+        }
+        
+        function testOriginal() {
+            testVideo(
+                'https://vod12.wgslsw.com/2024/12/31/5e8d8c9c-9f9c-4e5c-9b5e-5e8d8c9c9f9c/playlist.m3u8',
+                '原始视频源'
+            );
+        }
+        
+        function testBackup1() {
+            testVideo(
+                'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                '备用源1 (Mux)'
+            );
+        }
+        
+        function testBackup2() {
+            testVideo(
+                'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
+                '备用源2 (Akamai)'
+            );
+        }
+        
+        function testBackup3() {
+            testVideo(
+                'https://mnmedias.api.telequebec.tv/m3u8/29880.m3u8',
+                '备用源3 (Telequebec)'
+            );
+        }
+        
+        function testMP4() {
+            testVideo(
+                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                'MP4视频源',
+                'video/mp4'
+            );
+        }
+        
+        // 页面加载时显示浏览器信息
+        window.onload = function() {
+            setStatus(`浏览器: ${navigator.userAgent}`, 'info');
+        };
+    </script>
+</body>
+</html>
